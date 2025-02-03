@@ -4,13 +4,13 @@ from collections import deque
 import shutil
 
 
-# Códigos ANSI para cores
+# ANSI codes for colors
 RED = "\033[91m"
 GRAY = "\033[90m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
-RESET = "\033[0m"  # Reseta a cor para o padrão do terminal
+RESET = "\033[0m"  # Reset color to default value (white)
 
 def print_with_color(text, color: str = GRAY, output_verbose: bool=True):
     if output_verbose:
@@ -23,12 +23,7 @@ def status_execution(**kwargs):
         max_width = len(f"Total records extracted:         {_}")
         summary = "--- EXTRACTION SUMMARY ---".center(max_width)
 
-        '''sys.stdout.write(f"\r{"\033[94m"}{summary}{RESET}\n")
-        sys.stdout.write(f"\r{kwargs.get('color_total_extracted')}Total records extracted: {kwargs.get('total_extracted')}{RESET}\n")
-        sys.stdout.write(f"\r{kwargs.get('color_total_errors')}Extraction errors: {kwargs.get('total_errors')}{RESET}")
-        sys.stdout.flush()'''
-
-        sys.stdout.write(f"\r\033[94m{summary}{RESET}\n")
+        sys.stdout.write(f"\r{"\033[94m"}{summary}{RESET}\n")
         sys.stdout.write(f"\r{kwargs.get('color_total_extracted')}Total records extracted:___ {kwargs.get('total_extracted')}{RESET}\n")
         sys.stdout.write(f"\r{kwargs.get('color_total_errors')}Extraction errors:_________ {kwargs.get('total_errors')}{RESET}")
         sys.stdout.flush()
