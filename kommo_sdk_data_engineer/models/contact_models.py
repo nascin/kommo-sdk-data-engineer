@@ -4,15 +4,6 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 
 
-class _ValueCustomField(BaseModel):
-    value: Optional[str] = None
-    enum_id: Optional[int] = None
-    enum_code: Optional[str] = None
-    
-class _CustomFieldValue(BaseModel):
-    field_id: Optional[int] = None
-    values: Optional[Union[List[_ValueCustomField], None]] = None
-
 class Contact(BaseModel):
     id: Optional[int] = None
     name: Optional[str] = None
@@ -27,18 +18,47 @@ class Contact(BaseModel):
     closest_task_at: Optional[int] = None
     is_deleted: Optional[bool] = None
     is_unsorted: Optional[bool] = None
-    custom_fields_values: Optional[Union[List[_CustomFieldValue], None]] = None
     account_id: Optional[int] = None
 
     class Config:
         extra = "forbid"
 
-class Lead(Contact):
+
+class CustomFieldValue(BaseModel):
+    contact_id: Optional[int] = None
+    field_id: Optional[int] = None
+    value: Optional[str] = None
+    enum_id: Optional[int] = None
+    enum_code: Optional[str] = None
+
+    class Config:
+        extra = "forbid"
+
+class Lead(BaseModel):
     contact_id: Optional[int] = None
     id: Optional[int] = None
 
     class Config:
         extra = "forbid"
+
+
+class Tag(BaseModel):
+    contact_id: Optional[int] = None
+    id: Optional[int] = None
+    name: Optional[str] = None
+    color: Optional[str] = None
+
+    class Config:
+        extra = "forbid"
+
+
+class Company(BaseModel):
+    contact_id: Optional[int] = None
+    id: Optional[int] = None
+
+    class Config:
+        extra = "forbid"
+
 
 class CatalogElement(BaseModel):
     contact_id: Optional[int] = None

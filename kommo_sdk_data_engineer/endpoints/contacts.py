@@ -11,8 +11,9 @@ from kommo_sdk_data_engineer.models.contact_models import (
     Contact as ContactModel,
     Lead as LeadModel,
     CatalogElement as CatalogElementModel,
-    _CustomFieldValue as _CustomFieldValueModel,
-    _ValueCustomField as _ValueCustomFieldModel
+    CustomFieldValue as CustomFieldValueModel,
+    Tag as TagModel,
+    Company as CompanyModel
 )
 
 
@@ -25,9 +26,12 @@ _CONTACTS_WITH_PARAMETERS: list = [
     _WITH_PARAMETER_CATALOG_ELEMENTS,
 ]
 
+_START_PAGE: int = 1
+_LIMIT: int = 250
+
 
 class Contacts:
-    def __init__(self, output_verbose: bool = True):
+    def __init__(self, output_verbose: bool = False):
         config = KommoConfig()
         self.url_base_api: str = f"{config.url_company}/api/v4"
         self.headers: dict = {
@@ -39,8 +43,123 @@ class Contacts:
 
         # lists to be filled
         self._all_contacts: List[ContactModel] = []
+        self._all_custom_field_values: List[CustomFieldValueModel] = []
+        self._all_tags: List[TagModel] = []
+        self._all_companies: List[CompanyModel] = []
         self._all_leads: List[LeadModel] = []
         self._all_catalog_elements: List[CatalogElementModel] = []
+
+    def get_all_contacts_list(
+        self,
+        with_params: Optional[List[str]] = None,
+        **kwargs
+    ) -> List[ContactModel]:
+
+        concurrency = max(self.limit_request_per_second, 1) # define concurrency based on request limit
+        chunk_size = concurrency
+        current_page = _START_PAGE
+        
+        all_contacts: List[ContactModel] = []
+        all_custom_field_values: List[CustomFieldValueModel] = []
+        all_tags: List[TagModel] = []
+        all_companies: List[CompanyModel] = []
+        all_leads: List[LeadModel] = []
+        all_catalog_elements: List[CatalogElementModel] = []
+        _total_errors: List[tuple] = []
+        
+        # function to fetch a page of leads
+        def fetch_page(page: int):
+            # Rate-limiting *simples*: dormir um pouco
+            time.sleep(1 / concurrency)
+
+            response = self._get_contacts_list(
+                page=page,
+                limit=_LIMIT,
+                with_params=with_params,
+                **kwargs
+            )
+
+            # if api returns 204, we already know there are no more data
+            if response.status_code == 204:
+                return None
+            # Verify if the request was error (4xx, 5xx, etc.)
+            response.raise_for_status()
+
+            data = response.json()
+
+            return data
+        
+        self._run_pages_in_parallel(
+            func=fetch_page,
+            current_page=current_page,
+            chunk_size=chunk_size,
+            concurrency=concurrency,
+            # pass all the lists to be filled
+            all_contacts=all_contacts,
+            all_custom_field_values=all_custom_field_values,
+            all_tags=all_tags,
+            all_companies=all_companies,
+            all_leads=all_leads,
+            all_catalog_elements=all_catalog_elements,
+            with_params=with_params,
+            # other parameters
+            _total_errors=_total_errors
+        )
+
+        self._all_contacts = all_contacts
+        self._all_custom_field_values = all_custom_field_values
+        self._all_tags = all_tags
+        self._all_companies = all_companies
+        self._all_leads = all_leads
+        self._all_catalog_elements = all_catalog_elements
+        
+        return all_contacts
+    
+    def get_contacts_list(
+        self,
+        page: int,
+        limit: int,
+        with_params: List[str] = None,
+        **kwargs
+    ) -> List[ContactModel]:
+        
+        _total_errors: List[tuple] = []
+
+        try:
+            response = self._get_contacts_list(
+                page=page,
+                limit=limit,
+                with_params=with_params,
+                **kwargs
+            )
+
+            # if api returns 204, we already know there are no more data
+            if response.status_code == 204:
+                print_with_color(f"Page {page} does not return any leads", "\033[93m")
+                return None
+
+            # Verify if the request was error (4xx, 5xx, etc.)
+            response.raise_for_status()
+
+            data = response.json()
+            contacts = self._contacts_list(data)
+        except Exception as e:
+            _total_errors.append((page, e))
+            print_last_extracted(f'Error fetching page [{page}]: {e}', "\033[91m", output_verbose=self.output_verbose)
+            return None
+        
+        if contacts:
+            self._all_contacts.append(contacts)
+        
+        print_with_color(f"Fetched page: [{page}] | Data: {contacts}", "\033[90m", output_verbose=self.output_verbose)
+        status_execution(
+            color_total_extracted="\033[92m",
+            total_extracted=len(self._all_contacts),
+            color_total_errors="\033[91m",
+            total_errors=len(_total_errors),
+            output_verbose=self.output_verbose
+        )
+        return contacts
 
     def _get_contacts_list(
         self,
@@ -53,7 +172,7 @@ class Contacts:
         if with_params is None:
             with_params = []
 
-        url = f"{self.url_base_api}/leads"
+        url = f"{self.url_base_api}/contacts"
         _params: Dict[str, Any] = {}
 
         # Validação básica dos parâmetros 'with'
@@ -74,22 +193,12 @@ class Contacts:
         except Exception as e:
             raise e
         
-    def _contacts_list(self, response: Dict[str, Any]) -> List[ContactModel]:
+    def _contacts_list(self, response: Dict[str, Any]) -> Dict[str, List[ContactModel] |List[CustomFieldValueModel]]:
         contacts_data = response.get('_embedded', {}).get('contacts', [])
         contacts: List[ContactModel] = []
 
         for item in contacts_data:
-            custom_fields_values: List[_CustomFieldValueModel] = []
-            for custom_field_value in item.get('custom_fields_values', []):
-                custom_fields_values.append(
-                    _ValueCustomFieldModel(
-                        value=custom_field_value.get('value'),
-                        enum_id=custom_field_value.get('enum_id'),
-                        enum_code=custom_field_value.get('enum_code'),
-                    )
-                )
-
-            lead = ContactModel(
+            contact = ContactModel(
                 id=item.get("id"),
                 name=item.get("name"),
                 first_name=item.get("first_name"),
@@ -103,12 +212,31 @@ class Contacts:
                 closest_task_at=item.get("closest_task_at"),
                 is_deleted=item.get("is_deleted"),
                 is_unsorted=item.get("is_unsorted"),
-                custom_fields_values=custom_fields_values,
                 account_id=item.get("account_id"),
             )
-            contacts.append(lead)
+            contacts.append(contact)
+
+            custom_field_values = self._custom_field_values_list(contact_id=contact.id, custom_fields_values=item.get("custom_fields_values", []))
             
-        return contacts
+        return {'contacts': contacts, 'custom_field_values': custom_field_values}
+    
+    def _custom_field_values_list(self, contact_id: int, custom_fields_values: List[Dict[str, Any]]) -> List[CustomFieldValueModel]:
+        custom_fields_values_data = custom_fields_values
+        _custom_fields_values: List[CustomFieldValueModel] = []
+
+        for item in custom_fields_values_data if custom_fields_values_data else []:
+            values = item.get("values", [])
+            for value in values:
+                custom_field_value = CustomFieldValueModel(
+                    contact_id=contact_id,
+                    field_id=item.get("field_id"),
+                    value=str(value.get("value")) if value.get("value") else None,
+                    enum_id=value.get("enum_id"),
+                    enum_code=value.get("enum_code"),
+                )
+                _custom_fields_values.append(custom_field_value)
+
+        return _custom_fields_values
     
     def _leads_list(self, contact: Dict[str, Any]) -> List[LeadModel]:
         leads_data = contact.get('_embedded', {}).get('leads', [])
@@ -123,7 +251,35 @@ class Contacts:
             
         return leads
     
-    def _catalog_elements_list(self, contact: Dict[str, Any]) -> List[CatalogElementModel]:
+    def _tags_list(self, contact: Dict[str, Any]) -> List[TagModel]:
+        tags_data = contact.get('_embedded', {}).get('tags', [])
+        tags: List[TagModel] = []
+
+        for item in tags_data:
+            tag = TagModel(
+                contact_id=contact.get("id"),
+                id=item.get("id"),
+                name=item.get("name"),
+                color=item.get("color"),
+            )
+            tags.append(tag)
+
+        return tags
+    
+    def _company_list(self, contact: Dict[str, Any]) -> List[CompanyModel]:
+        company_data = contact.get('_embedded', {}).get('companies', [])
+        companies: List[CompanyModel] = []
+
+        for item in company_data:
+            company = CompanyModel(
+                contact_id=contact.get("id"),
+                id=item.get("id"),
+            )
+            companies.append(company)
+
+        return companies
+    
+    def _catalog_element_list(self, contact: Dict[str, Any]) -> List[CatalogElementModel]:
         catalog_elements_data = contact.get('_embedded', {}).get('catalog_elements', [])
         catalog_elements: List[CatalogElementModel] = []
 
@@ -138,3 +294,60 @@ class Contacts:
             catalog_elements.append(catalog_element)
 
         return catalog_elements
+    
+    def _run_pages_in_parallel(self, func, **kwargs) -> None:
+        while True:
+            pages_to_fetch = range(kwargs.get('current_page'), kwargs.get('current_page') + kwargs.get('chunk_size'))
+            results = []
+            stop = False # to stop the loop when all pages are fetched
+
+            with ThreadPoolExecutor(max_workers=kwargs.get('concurrency')) as executor:
+                future_to_page = {
+                    executor.submit(func, p): p for p in pages_to_fetch
+                }
+
+                for future in as_completed(future_to_page):
+                    page_num = future_to_page[future]
+                    try:
+                        data_page = future.result()
+                        if data_page is None: # if the page is empty, stop the loop
+                            stop = True
+                        else:
+                            results.append(data_page)
+                            print_last_extracted(f"Fetched page: [{page_num}] | Data: {self._contacts_list(data_page)}", "\033[90m", output_verbose=self.output_verbose)
+                    except Exception as e:
+                        stop = True
+                        kwargs.get('_total_errors').append((page_num, e))
+                        print_last_extracted(f'Error fetching page [{page_num}]: {e}', "\033[91m", output_verbose=self.output_verbose)
+        
+            if stop and not results:
+                break
+
+            for data_page in results:
+                kwargs.get('all_contacts').extend(self._contacts_list(data_page).get('contacts'))
+                kwargs.get('all_custom_field_values').extend(self._contacts_list(data_page).get('custom_field_values'))
+
+                for contact in data_page.get('_embedded', {}).get('contacts', []):
+                    if contact:
+                        kwargs.get('all_tags').extend(self._tags_list(contact))
+                        kwargs.get('all_companies').extend(self._company_list(contact))
+
+                if _WITH_PARAMETER_LEADS in kwargs.get('with_params'):
+                    for contact in data_page.get('_embedded', {}).get('contacts', []):
+                        kwargs.get('all_leads').extend(self._leads_list(contact))
+                if _WITH_PARAMETER_CATALOG_ELEMENTS in kwargs.get('with_params'):
+                    for contact in data_page.get('_embedded', {}).get('contacts', []):
+                        kwargs.get('all_catalog_elements').extend(self._catalog_element_list(contact))
+
+            status_execution(
+                color_total_extracted="\033[92m",
+                total_extracted=len(kwargs.get('all_contacts')),
+                color_total_errors="\033[91m",
+                total_errors=len(kwargs.get('_total_errors')),
+                output_verbose=self.output_verbose
+            )
+
+            if stop:
+                break
+
+            kwargs['current_page'] += kwargs.get('chunk_size')
