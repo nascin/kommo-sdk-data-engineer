@@ -20,11 +20,23 @@ class Lead(BaseModel):
     updated_at: Optional[int] = None
     closed_at: Optional[int] = None
     closest_task_at: Optional[int] = None
+    is_deleted: Optional[bool] = None
     custom_fields_values: Optional[Union[List[Any], None]] = None
     score: Optional[int] = None
     account_id: Optional[int] = None
     labor_cost: Optional[int] = None
     is_price_modified_by_robot: Optional[bool] = None
+
+    class Config:
+        extra = "forbid"
+
+
+class CustomFieldValue(BaseModel):
+    lead_id: Optional[int] = None
+    field_id: Optional[int] = None
+    value: Optional[str] = None
+    enum_id: Optional[int] = None
+    enum_code: Optional[str] = None
 
     class Config:
         extra = "forbid"

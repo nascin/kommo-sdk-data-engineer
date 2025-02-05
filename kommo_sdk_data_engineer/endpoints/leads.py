@@ -13,7 +13,8 @@ from kommo_sdk_data_engineer.models.lead_models import (
     Tag as TagModel, 
     Company as CompanyModel, 
     Contact as ContactModel, 
-    CatalogElement as CatalogElementModel
+    CatalogElement as CatalogElementModel,
+    CustomFieldValue as CustomFieldValueModel
 )
 
 
@@ -38,7 +39,7 @@ _LIMIT: int = 250
 
 
 class Leads:
-    def __init__(self, output_verbose: bool = True):
+    def __init__(self, output_verbose: bool = False):
         config = KommoConfig()
         self.url_base_api: str = f"{config.url_company}/api/v4"
         self.headers: dict = {
@@ -50,6 +51,7 @@ class Leads:
 
         # lists to be filled
         self._all_leads: List[LeadModel] = []
+        self._all_custom_field_values: List[CustomFieldValueModel] = []
         self._all_loss_reasons: List[LossReasonModel] = []
         self._all_tags: List[TagModel] = []
         self._all_companies: List[CompanyModel] = []
@@ -67,6 +69,7 @@ class Leads:
         current_page = _START_PAGE
         
         all_leads: List[LeadModel] = []
+        all_custom_field_values: List[CustomFieldValueModel] = []
         all_loss_reasons: List[LossReasonModel] = []
         all_tags: List[TagModel] = []
         all_companies: List[CompanyModel] = []
@@ -75,7 +78,7 @@ class Leads:
         _total_errors: List[tuple] = []
         
         # function to fetch a page of leads
-        def fetch_page(page: int) -> Optional[List[LeadModel]]:
+        def fetch_page(page: int):
             # Rate-limiting *simples*: dormir um pouco
             time.sleep(1 / concurrency)
 
@@ -109,6 +112,7 @@ class Leads:
             concurrency=concurrency,
             # pass all the lists to be filled
             all_leads=all_leads,
+            all_custom_field_values=all_custom_field_values,
             all_loss_reasons=all_loss_reasons,
             all_tags=all_tags,
             all_companies=all_companies,
@@ -120,6 +124,7 @@ class Leads:
         )
 
         self._all_leads = all_leads
+        self._all_custom_field_values = all_custom_field_values
         self._all_loss_reasons = all_loss_reasons
         self._all_tags = all_tags
         self._all_companies = all_companies
@@ -206,7 +211,7 @@ class Leads:
         except Exception as e:
             raise e
 
-    def _leads_list(self, response: Dict[str, Any]) -> List[LeadModel]:
+    def _leads_list(self, response: Dict[str, Any]) -> Dict[str, List[LeadModel] | List[CustomFieldValueModel]]:
         leads_data = response.get('_embedded', {}).get('leads', [])
         leads: List[LeadModel] = []
 
@@ -227,6 +232,7 @@ class Leads:
                 updated_at=item.get("updated_at"),
                 closed_at=item.get("closed_at"),
                 closest_task_at=item.get("closest_task_at"),
+                is_deleted=item.get("is_deleted"),
                 custom_fields_values=item.get("custom_fields_values"),
                 score=item.get("score"),
                 account_id=item.get("account_id"),
@@ -234,9 +240,29 @@ class Leads:
                 is_price_modified_by_robot=item.get("is_price_modified_by_robot"),
             )
             leads.append(lead)
-            
-        return leads
 
+            custom_field_values = self._custom_field_values_list(lead_id=lead.id, custom_fields_values=item.get("custom_fields_values", []))
+            
+        return {'leads': leads, 'custom_field_values': custom_field_values}
+
+    def _custom_field_values_list(self, lead_id: int, custom_fields_values: List[Dict[str, Any]]) -> List[CustomFieldValueModel]:
+        custom_fields_values_data = custom_fields_values
+        _custom_fields_values: List[CustomFieldValueModel] = []
+
+        for item in custom_fields_values_data if custom_fields_values_data else []:
+            values = item.get("values", [])
+            for value in values:
+                custom_field_value = CustomFieldValueModel(
+                    lead_id=lead_id,
+                    field_id=item.get("field_id"),
+                    value=str(value.get("value")) if value.get("value") else None,
+                    enum_id=value.get("enum_id"),
+                    enum_code=value.get("enum_code"),
+                )
+                _custom_fields_values.append(custom_field_value)
+
+        return _custom_fields_values
+    
     def _loss_reason_list(self, lead: Dict[str, Any]) -> List[LossReasonModel]:
         loss_reasons_data = lead.get('_embedded', {}).get('loss_reason', [])
         loss_reasons: List[LossReasonModel] = []
@@ -341,7 +367,8 @@ class Leads:
                 break
 
             for data_page in results:
-                kwargs.get('all_leads').extend(self._leads_list(data_page))
+                kwargs.get('all_leads').extend(self._leads_list(data_page).get('leads'))
+                kwargs.get('all_custom_field_values').extend(self._leads_list(data_page).get('custom_field_values'))
 
                 for lead in data_page.get('_embedded', {}).get('leads', []):
                     if lead:
