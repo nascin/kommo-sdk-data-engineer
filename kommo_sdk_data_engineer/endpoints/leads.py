@@ -214,6 +214,7 @@ class Leads:
     def _leads_list(self, response: Dict[str, Any]) -> Dict[str, List[LeadModel] | List[CustomFieldValueModel]]:
         leads_data = response.get('_embedded', {}).get('leads', [])
         leads: List[LeadModel] = []
+        custom_field_values: List[CustomFieldValueModel] = []
 
         for item in leads_data:
             lead = LeadModel(
@@ -233,7 +234,6 @@ class Leads:
                 closed_at=item.get("closed_at"),
                 closest_task_at=item.get("closest_task_at"),
                 is_deleted=item.get("is_deleted"),
-                custom_fields_values=item.get("custom_fields_values"),
                 score=item.get("score"),
                 account_id=item.get("account_id"),
                 labor_cost=item.get("labor_cost"),
@@ -241,8 +241,9 @@ class Leads:
             )
             leads.append(lead)
 
-            custom_field_values = self._custom_field_values_list(lead_id=lead.id, custom_fields_values=item.get("custom_fields_values", []))
-            
+            _custom_field_values = self._custom_field_values_list(lead_id=lead.id, custom_fields_values=item.get("custom_fields_values", []))
+            custom_field_values.extend(_custom_field_values)
+
         return {'leads': leads, 'custom_field_values': custom_field_values}
 
     def _custom_field_values_list(self, lead_id: int, custom_fields_values: List[Dict[str, Any]]) -> List[CustomFieldValueModel]:
@@ -309,7 +310,7 @@ class Leads:
 
         return contacts
     
-    def _company_list(self, lead: Dict[str, Any]) -> List[CompanyModel]:
+    def _companies_list(self, lead: Dict[str, Any]) -> List[CompanyModel]:
         company_data = lead.get('_embedded', {}).get('companies', [])
         companies: List[CompanyModel] = []
 
@@ -373,7 +374,7 @@ class Leads:
                 for lead in data_page.get('_embedded', {}).get('leads', []):
                     if lead:
                         kwargs.get('all_tags').extend(self._tags_list(lead))
-                        kwargs.get('all_companies').extend(self._company_list(lead))
+                        kwargs.get('all_companies').extend(self._companies_list(lead))
 
                 if _WITH_PARAMETER_LOSS_REASON in kwargs.get('with_params'):
                     for lead in data_page.get('_embedded', {}).get('leads', []):
