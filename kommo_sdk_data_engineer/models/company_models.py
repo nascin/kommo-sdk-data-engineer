@@ -1,7 +1,7 @@
-from typing import Optional, List, Union, Any
+from typing import Optional, Any
 from pydantic import BaseModel
 
-from typing import List, Dict, Any
+from typing import Optional, Dict, Any
 
 
 class Company(BaseModel):

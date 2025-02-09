@@ -15,6 +15,7 @@ from kommo_sdk_data_engineer.models.company_models import (
     CatalogElement as CatalogElementModel,
     CustomFieldValue as CustomFieldValueModel
 )
+from kommo_sdk_data_engineer.kommo import KommoBase
 
 _WITH_PARAMETER_CONTACTS: str = 'contacts'
 _WITH_PARAMETER_LEADS: str = 'leads'
@@ -30,7 +31,7 @@ _START_PAGE: int = 1
 _LIMIT: int = 250
 
 
-class Companies:
+class Companies(KommoBase):
     def __init__(self, output_verbose: bool = False):
         config = KommoConfig()
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -161,6 +162,24 @@ class Companies:
             output_verbose=self.output_verbose
         )
         return companies
+    
+    def all_companies(self) -> List[CompanyModel]:
+        return self._all_companies
+    
+    def all_custom_field_values(self) -> List[CustomFieldValueModel]:
+        return self._all_custom_field_values
+    
+    def all_leads(self) -> List[LeadModel]:
+        return self._all_leads
+    
+    def all_tags(self) -> List[TagModel]:
+        return self._all_tags
+    
+    def all_contacts(self) -> List[ContactModel]:
+        return self._all_contacts
+    
+    def all_catalog_elements(self) -> List[CatalogElementModel]:
+        return self._all_catalog_elements
 
     def _get_companies_list(
         self,
