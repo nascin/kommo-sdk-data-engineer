@@ -16,6 +16,7 @@ from kommo_sdk_data_engineer.models.lead_models import (
     CatalogElement as CatalogElementModel,
     CustomFieldValue as CustomFieldValueModel
 )
+from kommo_sdk_data_engineer.kommo import KommoBase
 
 
 # values that can be used in the 'with' parameter
@@ -38,7 +39,7 @@ _START_PAGE: int = 1
 _LIMIT: int = 250
 
 
-class Leads:
+class Leads(KommoBase):
     def __init__(self, output_verbose: bool = False):
         config = KommoConfig()
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -160,7 +161,7 @@ class Leads:
             response.raise_for_status()
 
             data = response.json()
-            leads = self._leads_list(data)
+            leads = self._leads_list(data).get("leads")
         except Exception as e:
             _total_errors.append((page, e))
             print_last_extracted(f'Error fetching page [{page}]: {e}', "\033[91m", output_verbose=self.output_verbose)
@@ -178,6 +179,27 @@ class Leads:
             output_verbose=self.output_verbose
         )
         return leads
+    
+    def all_leads(self) -> List[LeadModel]:
+        return self._all_leads
+    
+    def all_custom_field_values(self) -> List[CustomFieldValueModel]:
+        return self._all_custom_field_values
+    
+    def all_loss_reasons(self) -> List[LossReasonModel]:
+        return self._all_loss_reasons
+    
+    def all_tags(self) -> List[TagModel]:
+        return self._all_tags
+    
+    def all_companies(self) -> List[CompanyModel]:
+        return self._all_companies
+    
+    def all_contacts(self) -> List[ContactModel]:
+        return self._all_contacts
+    
+    def all_catalog_elements(self) -> List[CatalogElementModel]:
+        return self._all_catalog_elements
 
     def _get_leads_list(
         self,

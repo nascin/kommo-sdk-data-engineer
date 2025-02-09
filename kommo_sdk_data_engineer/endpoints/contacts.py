@@ -15,6 +15,7 @@ from kommo_sdk_data_engineer.models.contact_models import (
     Tag as TagModel,
     Company as CompanyModel
 )
+from kommo_sdk_data_engineer.kommo import KommoBase
 
 
 # values that can be used in the 'with' parameter
@@ -30,7 +31,7 @@ _START_PAGE: int = 1
 _LIMIT: int = 250
 
 
-class Contacts:
+class Contacts(KommoBase):
     def __init__(self, output_verbose: bool = False):
         config = KommoConfig()
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -160,6 +161,24 @@ class Contacts:
             output_verbose=self.output_verbose
         )
         return contacts
+    
+    def all_contacts(self) -> List[ContactModel]:
+        return self._all_contacts
+    
+    def all_custom_field_values(self) -> List[CustomFieldValueModel]:
+        return self._all_custom_field_values
+    
+    def all_tags(self) -> List[TagModel]:
+        return self._all_tags
+    
+    def all_companies(self) -> List[CompanyModel]:
+        return self._all_companies
+    
+    def all_leads(self) -> List[LeadModel]:
+        return self._all_leads
+    
+    def all_catalog_elements(self) -> List[CatalogElementModel]:
+        return self._all_catalog_elements
 
     def _get_contacts_list(
         self,

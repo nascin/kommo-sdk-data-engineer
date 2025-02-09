@@ -1,7 +1,6 @@
-from typing import Optional, List, Union, Any
 from pydantic import BaseModel
 
-from typing import List, Dict, Any
+from typing import Optional, Dict, Any
 
 
 class Lead(BaseModel):
