@@ -24,8 +24,8 @@ _PATH_PARAMETERS_CUSTOM_FIELDS: list = [
 
 
 class CustomFields(KommoBase):
-    def __init__(self, output_verbose: bool = False):
-        config = KommoConfig()
+    def __init__(self, config: KommoConfig, output_verbose: bool = False):
+        config: KommoConfig = config
         self.url_base_api: str = f"{config.url_company}/api/v4"
         self.headers: dict = {
             "Accept": "*/*",

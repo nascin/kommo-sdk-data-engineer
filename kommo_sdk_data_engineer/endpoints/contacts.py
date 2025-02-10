@@ -32,8 +32,8 @@ _LIMIT: int = 250
 
 
 class Contacts(KommoBase):
-    def __init__(self, output_verbose: bool = False):
-        config = KommoConfig()
+    def __init__(self, config: KommoConfig, output_verbose: bool = False):
+        config: KommoConfig = config
         self.url_base_api: str = f"{config.url_company}/api/v4"
         self.headers: dict = {
             "Accept": "*/*",
@@ -52,7 +52,7 @@ class Contacts(KommoBase):
 
     def get_all_contacts_list(
         self,
-        with_params: Optional[List[str]] = None,
+        with_params: Optional[List[str]] = [],
         **kwargs
     ) -> List[ContactModel]:
 
@@ -120,7 +120,7 @@ class Contacts(KommoBase):
         self,
         page: int,
         limit: int,
-        with_params: List[str] = None,
+        with_params: List[str] = [],
         **kwargs
     ) -> List[ContactModel]:
         
@@ -184,7 +184,7 @@ class Contacts(KommoBase):
         self,
         page: int,
         limit: int,
-        with_params: List[str] = None,
+        with_params: List[str] = [],
         **kwargs
     ) -> Response:
 
