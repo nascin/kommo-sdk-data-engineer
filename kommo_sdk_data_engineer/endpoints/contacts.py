@@ -136,7 +136,7 @@ class Contacts(KommoBase):
 
             # if api returns 204, we already know there are no more data
             if response.status_code == 204:
-                print_with_color(f"Page {page} does not return any leads", "\033[93m")
+                print_with_color(f"Page {page} does not return any contacts", "\033[93m")
                 return None
 
             # Verify if the request was error (4xx, 5xx, etc.)
