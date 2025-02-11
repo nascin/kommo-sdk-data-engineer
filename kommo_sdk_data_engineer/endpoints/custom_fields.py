@@ -59,7 +59,7 @@ class CustomFields(KommoBase):
 
             # if api returns 204, we already know there are no more data
             if response.status_code == 204:
-                print_with_color(f"Page {page} does not return any leads", "\033[93m")
+                print_with_color(f"Page {page} does not return any custom fields", "\033[93m")
                 return None
 
             # Verify if the request was error (4xx, 5xx, etc.)
@@ -71,7 +71,7 @@ class CustomFields(KommoBase):
             required_statuses = self._custom_fields_list(data).get('required_statuses')
         except Exception as e:
             _total_errors.append((page, e))
-            print_with_color(f'Error fetching page [{page}]: {e.with_traceback()}', "\033[91m", output_verbose=self.output_verbose) # 
+            print_with_color(f'Error fetching page [{page}]: {e}', "\033[91m", output_verbose=self.output_verbose) # 
             return None
         
         if custom_fields:
