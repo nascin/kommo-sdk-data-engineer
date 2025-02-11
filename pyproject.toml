@@ -22,8 +22,9 @@ classifiers = [
     "Topic :: Software Development :: Internationalization",
 ]
 dependencies = [
-  "requests==2.32.3",
-  "pydantic==2.10.6"
+  "pandas>=2.1.4",
+  "requests>=2.32.3",
+  "pydantic>=2.10.6"
 ]
 
 [project.urls]
