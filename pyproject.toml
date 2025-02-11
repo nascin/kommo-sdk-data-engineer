@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kommo_sdk_data_engineer"
-version = "0.1.4"
+version = "0.1.5"
 
 authors = [
   { name="Mailson Náscin", email="mailson.nascin@gmail.com" },
@@ -22,7 +22,6 @@ classifiers = [
     "Topic :: Software Development :: Internationalization",
 ]
 dependencies = [
-  "pandas==2.2.3",
   "requests==2.32.3",
   "pydantic==2.10.6"
 ]
