@@ -4,12 +4,12 @@
 kommo SDK for Data Enginner is a comprehensive Python SDK designed for data engineers working with the Kommo API. It simplifies API integration, data extraction, and transformation processes, making it easier to manage and analyze data efficiently.
 
 # Installation
-```
+```bash
 pip install kommo-sdk-data-engineer
 ```
 
 # How to Use
-```
+```python
 from kommo_sdk_data_engineer import KommoConfig, Leads
 
 TOKEN_LONG_DURATION = '[TOKEN]'
