@@ -50,6 +50,8 @@ class Companies(KommoBase):
         self._all_contacts: List[ContactModel] = []
         self._all_catalog_elements: List[CatalogElementModel] = []
 
+        super().__init__(output_verbose=self.output_verbose)
+
     def get_all_companies_list(
         self,
         with_params: Optional[List[str]] = [],

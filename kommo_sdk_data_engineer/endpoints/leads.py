@@ -58,6 +58,8 @@ class Leads(KommoBase):
         self._all_companies: List[CompanyModel] = []
         self._all_contacts: List[ContactModel] = []
         self._all_catalog_elements: List[CatalogElementModel] = []
+
+        super().__init__(output_verbose=self.output_verbose)
     
     def get_all_leads_list(
         self,

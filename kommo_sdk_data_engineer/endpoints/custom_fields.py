@@ -39,6 +39,8 @@ class CustomFields(KommoBase):
         self._all_enum_values: List[EnumValueModel] = []
         self._all_required_statuses: List[RequiredStatusModel] = []
 
+        super().__init__(output_verbose=self.output_verbose)
+
     def get_custom_fields_list(
         self,
         page: int,
