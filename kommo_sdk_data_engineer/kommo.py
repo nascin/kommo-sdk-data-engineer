@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 from pydantic import BaseModel
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from sqlalchemy import create_engine, text
 

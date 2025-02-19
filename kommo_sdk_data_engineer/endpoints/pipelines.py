@@ -27,6 +27,8 @@ class Pipelines(KommoBase):
         self._all_pipelines: List[PipelineModel] = []
         self._all_statuses: List[StatusModel] = []
 
+        super().__init__(output_verbose=self.output_verbose)
+
     def get_pipelines_list(
         self,
         **kwargs
