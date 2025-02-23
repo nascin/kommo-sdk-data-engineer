@@ -32,6 +32,32 @@ _LIMIT: int = 250
 
 
 class Companies(KommoBase):
+    '''
+    Class to get all companies.
+
+    :param config: An instance of the KommoConfig class.
+    :type config: KommoConfig
+
+    :param output_verbose: A boolean value to enable verbose output.
+    :type output_verbose: bool
+
+    Example:
+
+    ```python
+    from kommo_sdk_data_engineer.config import KommoConfig
+    from kommo_sdk_data_engineer.endpoints.companies import Companies
+
+    config = KommoConfig(
+        url_company='https://[YOUR SUBDOMAIN].kommo.com',
+        token_long_duration="YOUR_TOKEN"
+    )
+
+    companies = Companies(config, output_verbose=True)
+    companies.get_all_companies_list(with_params=['contacts', 'leads', 'catalog_elements'])
+    companies.to_dataframe(companies.all_companies())
+    ```
+
+    '''
     def __init__(self, config: KommoConfig, output_verbose: bool = False):
         config: KommoConfig = config
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -58,6 +84,20 @@ class Companies(KommoBase):
         **kwargs
     ) -> List[CompanyModel]:
 
+        """
+        Get all companies with their respective custom field values, leads, tags, contacts and catalog elements.
+        
+        reference: https://developers.kommo.com/reference/companies-list
+        
+        :param with_params: A list of strings that can be used to filter the results of the API call.
+            The options are: 'contacts', 'leads', 'catalog_elements'.
+        :type with_params: Optional[List[str]]
+        :param kwargs: Additional keyword arguments to be passed like query parameters to the API call.
+            For example, 'filter[created_at][from]' or any query parameter supported by the API.
+        :type kwargs: Any
+        :return: A list of CompanyModel objects.
+        :rtype: List[CompanyModel]
+        """
         concurrency = max(self.limit_request_per_second, 1) # define concurrency based on request limit
         chunk_size = concurrency
         current_page = _START_PAGE
@@ -127,6 +167,25 @@ class Companies(KommoBase):
         **kwargs
     ) -> List[CompanyModel]:
         
+        """
+        Fetch a page of companies.
+
+        reference: https://developers.kommo.com/reference/companies-list
+
+        :param page: The page number to fetch. Default is 1.
+        :type page: int
+        :param limit: The number of companies to fetch per page. Default is 250.
+        :type limit: int
+        :param with_params: A list of strings that can be used to filter the results of the API call.
+            The options are: 'contacts', 'leads', 'catalog_elements'.
+        :type with_params: Optional[List[str]]
+        :param kwargs: Additional keyword arguments to be passed like query parameters to the API call.
+            For example, 'filter[created_at][from]' or any query parameter supported by the API.
+        :type kwargs: Any
+        :return: A list of CompanyModel objects.
+        :rtype: List[CompanyModel]
+        """
+
         _total_errors: List[tuple] = []
 
         try:
@@ -166,21 +225,60 @@ class Companies(KommoBase):
         return companies
     
     def all_companies(self) -> List[CompanyModel]:
+        """
+        Return all companies fetched.
+
+        :return: A list of CompanyModel objects.
+        :rtype: List[CompanyModel]
+        """
         return self._all_companies
     
     def all_custom_field_values(self) -> List[CustomFieldValueModel]:
+        """
+        Return all custom field values for all companies fetched.
+
+        :return: A list of CustomFieldValueModel objects.
+        :rtype: List[CustomFieldValueModel]
+        """
         return self._all_custom_field_values
     
     def all_leads(self) -> List[LeadModel]:
+        """
+        Return all leads fetched if 'with_params' includes 'leads'.
+
+        :return: A list of LeadModel objects.
+        :rtype: List[LeadModel]
+        """
+
         return self._all_leads
     
     def all_tags(self) -> List[TagModel]:
+        """
+        Return all tags fetched.
+        Each tag is linked to the respective company id.
+
+        :return: A list of TagModel objects.
+        :rtype: List[TagModel]
+        """
         return self._all_tags
     
     def all_contacts(self) -> List[ContactModel]:
+        """
+        Return all contacts fetched if 'with_params' includes 'contacts'.
+
+        :return: A list of ContactModel objects.
+        :rtype: List[ContactModel]
+        """
+
         return self._all_contacts
     
     def all_catalog_elements(self) -> List[CatalogElementModel]:
+        """
+        Return all catalog elements fetched if 'with_params' includes 'catalog_elements'.
+
+        :return: A list of CatalogElementModel objects.
+        :rtype: List[CatalogElementModel]
+        """
         return self._all_catalog_elements
 
     def _get_companies_list(
