@@ -92,9 +92,9 @@ class Companies(KommoBase):
         :param with_params: A list of strings that can be used to filter the results of the API call.
             The options are: 'contacts', 'leads', 'catalog_elements'.
         :type with_params: Optional[List[str]]
-        :param kwargs: Additional keyword arguments to be passed like query parameters to the API call.
-            For example, 'filter[created_at][from]' or any query parameter supported by the API.
-        :type kwargs: Any
+        :param kwargs: Additional keyword arguments to be passed like a dictionary of query parameters to the API call.
+            For example, **{'filter[created_at][from]':1740437575} or any query parameter supported by the API.
+        :type kwargs: dict
         :return: A list of CompanyModel objects.
         :rtype: List[CompanyModel]
         """
@@ -179,9 +179,9 @@ class Companies(KommoBase):
         :param with_params: A list of strings that can be used to filter the results of the API call.
             The options are: 'contacts', 'leads', 'catalog_elements'.
         :type with_params: Optional[List[str]]
-        :param kwargs: Additional keyword arguments to be passed like query parameters to the API call.
+        :param kwargs: Additional keyword arguments to be passed like a dictionary of query parameters to the API call.
             For example, 'filter[created_at][from]' or any query parameter supported by the API.
-        :type kwargs: Any
+        :type kwargs: dict
         :return: A list of CompanyModel objects.
         :rtype: List[CompanyModel]
         """
