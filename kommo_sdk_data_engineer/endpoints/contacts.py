@@ -152,7 +152,7 @@ class Contacts(KommoBase):
             return None
         
         if contacts:
-            self._all_contacts.append(contacts)
+            self._all_contacts.extend(contacts)
         
         print_with_color(f"Fetched page: [{page}] | Data: {contacts}", "\033[90m", output_verbose=self.output_verbose)
         status_execution(

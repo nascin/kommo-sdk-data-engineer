@@ -212,7 +212,7 @@ class Companies(KommoBase):
             return None
         
         if companies:
-            self._all_companies.append(companies)
+            self._all_companies.extend(companies)
         
         print_with_color(f"Fetched page: [{page}] | Data: {companies}", "\033[90m", output_verbose=self.output_verbose)
         status_execution(

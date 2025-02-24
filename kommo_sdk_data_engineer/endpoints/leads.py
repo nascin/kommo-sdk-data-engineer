@@ -170,7 +170,7 @@ class Leads(KommoBase):
             return None
         
         if leads:
-            self._all_leads.append(leads)
+            self._all_leads.extend(leads)
         
         print_with_color(f"Fetched page: [{page}] | Data: {leads}", "\033[90m", output_verbose=self.output_verbose)
         status_execution(
@@ -382,7 +382,7 @@ class Leads(KommoBase):
                             stop = True
                         else:
                             results.append(data_page)
-                            print_last_extracted(f"Fetched page: [{page_num}] | Data: {self._leads_list(data_page)}", "\033[90m", output_verbose=self.output_verbose)
+                            print_last_extracted(f"Fetched page: [{page_num}] | Data: {self._leads_list(data_page).get('leads')}", "\033[90m", output_verbose=self.output_verbose)
                     except Exception as e:
                         stop = True
                         kwargs.get('_total_errors').append((page_num, e))
