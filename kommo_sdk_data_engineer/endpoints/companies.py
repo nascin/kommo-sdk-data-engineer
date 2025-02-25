@@ -35,6 +35,8 @@ class Companies(KommoBase):
     '''
     Class to get all companies.
 
+    reference: https://developers.kommo.com/reference/companies-list
+
     :param config: An instance of the KommoConfig class.
     :type config: KommoConfig
 

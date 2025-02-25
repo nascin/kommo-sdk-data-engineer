@@ -15,6 +15,32 @@ _START_PAGE: int = 1
 _LIMIT: int = 250
 
 class Users(KommoBase):
+    '''
+    Class to get all users
+
+    reference: https://developers.kommo.com/reference/users-list
+
+    :param config: An instance of the KommoConfig class.
+    :type config: KommoConfig
+
+    :param output_verbose: A boolean value to enable verbose output.
+    :type output_verbose: bool
+
+    Example:
+
+    ```python
+    from kommo_sdk_data_engineer.config import KommoConfig
+    from kommo_sdk_data_engineer.endpoints.users import Users
+
+    config = KommoConfig(
+        url_company='https://[YOUR SUBDOMAIN].kommo.com',
+        token_long_duration="YOUR_TOKEN"
+    )
+
+    users = Users(config, output_verbose=True)
+    users.get_users_list(page=1, limit=250)
+    ```
+    '''
     def __init__(self, config: KommoConfig, output_verbose: bool = False):
         config: KommoConfig = config
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -36,6 +62,20 @@ class Users(KommoBase):
         limit: int = _LIMIT,
     ) -> List[UserModel] | None:
         
+        """
+        Fetch a page of users.
+
+        reference: https://developers.kommo.com/reference/users-list
+
+        :param page: The page number to fetch. Defaults to 1.
+        :type page: int
+
+        :param limit: The number of users to fetch per page. Defaults to 250.
+        :type limit: int
+        
+        :return: A list of UserModel objects if successful, or None if no data is returned or an error occurs.
+        :rtype: List[UserModel] | None
+        """
         _total_errors: List[tuple] = []
 
         try:
@@ -73,6 +113,12 @@ class Users(KommoBase):
         return self._all_users
 
     def all_users(self) -> List[UserModel]:
+        """
+        Return all users fetched.
+
+        :return: A list of UserModel objects.
+        :rtype: List[UserModel]
+        """
         return self._all_users
 
     def _get_users_list(

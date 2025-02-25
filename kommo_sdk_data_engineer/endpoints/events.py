@@ -36,6 +36,33 @@ _LIMIT: int = 250
 
 
 class Events(KommoBase):
+    '''
+    Class to get events
+
+    reference: https://developers.kommo.com/reference/events-list
+
+    :param config: An instance of the KommoConfig class.
+    :type config: KommoConfig
+
+    :param output_verbose: A boolean value to enable verbose output.
+    :type output_verbose: bool
+
+    Example:
+
+    ```python
+    from kommo_sdk_data_engineer.config import KommoConfig
+    from kommo_sdk_data_engineer.endpoints.events import Events
+
+    config = KommoConfig(
+        url_company='https://[YOUR SUBDOMAIN].kommo.com',
+        token_long_duration="YOUR_TOKEN"
+    )
+
+    events = Events(config, output_verbose=True)
+    events.get_all_events_list(events_types=['lead_status_changed], **{'filter[created_at][from]':1740437575})
+    events.to_dataframe(events.all_events())
+    ```
+    '''
     def __init__(self, config: KommoConfig, output_verbose: bool = False):
         config: KommoConfig = config
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -56,6 +83,21 @@ class Events(KommoBase):
         events_types: List[str] = None,
         **kwargs
     ) -> List[EventModel]:
+
+        """
+        Retrieve all events with specified types and additional filtering options.
+
+        This method fetches all events from the API by iterating through pages concurrently. The event types
+        can be specified to filter the events to be retrieved. Additional query parameters can be passed through
+        kwargs to further refine the results.
+
+        :param events_types: A list of strings specifying the types of events to retrieve. If None, all types are retrieved.
+        :type events_types: List[str]
+        :param kwargs: Additional keyword arguments for query parameters to the API call.
+        :type kwargs: dict
+        :return: A list of EventModel objects representing the retrieved events.
+        :rtype: List[EventModel]
+        """
 
         concurrency = max(self.limit_request_per_second, 1) # define concurrency based on request limit
         chunk_size = concurrency
@@ -111,6 +153,22 @@ class Events(KommoBase):
         **kwargs
     ) -> List[EventModel]:
         
+        """
+        Fetch a page of events.
+
+        reference: https://developers.kommo.com/reference/events-list
+
+        :param page: The page number to fetch. Defaults to 1.
+        :type page: int
+        :param limit: The number of events to fetch per page. Defaults to 250.
+        :type limit: int
+        :param events_types: A list of strings specifying the types of events to retrieve. If None, all types are retrieved.
+        :type events_types: List[str]
+        :param kwargs: Additional keyword arguments for query parameters to the API call.
+        :type kwargs: dict
+        :return: A list of EventModel objects representing the retrieved events.
+        :rtype: List[EventModel]
+        """
         _total_errors: List[tuple] = []
 
         try:
@@ -150,6 +208,12 @@ class Events(KommoBase):
         return events
 
     def all_events(self) -> List[EventModel]:
+        """
+        Return all events fetched.
+
+        :return: A list of EventModel objects.
+        :rtype: List[EventModel]
+        """
         return self._all_events
 
     def _get_events_list(

@@ -24,6 +24,32 @@ _PATH_PARAMETERS_CUSTOM_FIELDS: list = [
 
 
 class CustomFields(KommoBase):
+    '''
+    Class to get custom fields
+
+    reference: https://developers.kommo.com/reference/custom-field-by-entity
+
+    :param config: An instance of the KommoConfig class.
+    :type config: KommoConfig
+
+    :param output_verbose: A boolean value to enable verbose output.
+    :type output_verbose: bool
+
+    Example:
+
+    ```python
+    from kommo_sdk_data_engineer.config import KommoConfig
+    from kommo_sdk_data_engineer.endpoints.custom_fields import CustomFields
+
+    config = KommoConfig(
+        url_company='https://[YOUR SUBDOMAIN].kommo.com',
+        token_long_duration="YOUR_TOKEN"
+    )
+
+    custom_fields = CustomFields(config, output_verbose=True)
+    custom_fields.get_custom_fields_list(page=1, limit=10, path_parameter='leads')
+    custom_fields.to_dataframe(custom_fields.all_custom_fields())
+    '''
     def __init__(self, config: KommoConfig, output_verbose: bool = False):
         config: KommoConfig = config
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -49,6 +75,23 @@ class CustomFields(KommoBase):
         **kwargs
     ) -> List[CustomFieldModel]:
         
+        """
+        Fetch a page of custom fields.
+
+        reference: https://developers.kommo.com/reference/custom-field-by-entity
+
+        :param page: The page number to fetch. Defaults to 1.
+        :type page: int
+        :param limit: The number of custom fields to fetch per page. Defaults to 250.
+        :type limit: int
+        :param path_parameter: A string that can be used to filter the results of the API call.
+            The options are: 'leads', 'companies', 'contacts'.
+        :type path_parameter: str
+        :param kwargs: Additional keyword arguments to be passed as query parameters to the API call.
+        :type kwargs: dict
+        :return: A list of CustomFieldModel objects if successful, or None if no data is returned or an error occurs.
+        :rtype: List[CustomFieldModel] or None
+        """
         _total_errors: List[tuple] = []
 
         try:
@@ -94,12 +137,31 @@ class CustomFields(KommoBase):
         return custom_fields
     
     def all_custom_fields(self) -> List[CustomFieldModel]:
+        """
+        Return all custom fields fetched.
+
+        :return: A list of CustomFieldModel objects.
+        :rtype: List[CustomFieldModel]
+        """
         return self._all_custom_field_values
     
     def all_enum_values(self) -> List[EnumValueModel]:
+        """
+        Return all enum values fetched.
+
+        :return: A list of EnumValueModel objects.
+        :rtype: List[EnumValueModel]
+        """
+
         return self._all_enum_values
     
     def all_required_statuses(self) -> List[RequiredStatusModel]:
+        """
+        Return all required statuses fetched.
+
+        :return: A list of RequiredStatusModel objects.
+        :rtype: List[RequiredStatusModel]
+        """
         return self._all_required_statuses
     
     def _get_custom_fields_list(
