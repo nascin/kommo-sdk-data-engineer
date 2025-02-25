@@ -13,6 +13,37 @@ from kommo_sdk_data_engineer.kommo import KommoBase
 
 
 class Pipelines(KommoBase):
+    '''
+    Class getting pipelines
+
+    reference: https://developers.kommo.com/reference/pipelines-list
+
+    :param config: KommoConfig object
+    :type config: KommoConfig
+
+    :param output_verbose: If True, print additional information. Defaults to False.
+    :type output_verbose: bool
+
+    :return: List of PipelineModel objects
+    :rtype: List[PipelineModel]
+
+    Example:
+
+    ```python
+    from kommo_sdk_data_engineer.config import KommoConfig
+    from kommo_sdk_data_engineer.endpoints.pipelines import Pipelines
+
+    config = KommoConfig(
+        url_company='https://[YOUR SUBDOMAIN].kommo.com',
+        token_long_duration="YOUR_TOKEN"
+    )
+
+    pipelines = Pipelines(config, output_verbose=True)
+    pipelines.get_pipelines_list()
+    pipelines.to_dataframe(pipelines.all_pipelines())
+    ```
+
+    '''
     def __init__(self, config: KommoConfig, output_verbose: bool = False):
         config: KommoConfig = config
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -34,6 +65,17 @@ class Pipelines(KommoBase):
         **kwargs
     ) -> List[PipelineModel] | None:
         
+        """
+        Fetch a list of pipelines from the API.
+
+        reference: https://developers.kommo.com/reference/pipelines-list
+
+        :param kwargs: Additional keyword arguments for the API request.
+        :type kwargs: dict
+        :return: A list of PipelineModel objects if successful, or None if no data is returned or an error occurs.
+        :rtype: List[PipelineModel] or None
+        """
+
         _total_errors: List[tuple] = []
 
         try:
@@ -62,12 +104,33 @@ class Pipelines(KommoBase):
         if statuses:
             self._all_statuses = statuses
 
+        print_with_color(f"Fetched | Data: {pipelines}", "\033[90m", output_verbose=self.output_verbose)
+        status_execution(
+            color_total_extracted="\033[92m",
+            total_extracted=len(self._all_pipelines),
+            color_total_errors="\033[91m",
+            total_errors=len(_total_errors),
+            output_verbose=self.output_verbose
+        )
+
         return self._all_pipelines
 
     def all_pipelines(self) -> List[PipelineModel]:
+        """
+        Return all pipelines fetched.
+
+        :return: A list of PipelineModel objects.
+        :rtype: List[PipelineModel]
+        """
         return self._all_pipelines
     
     def all_statuses(self) -> List[StatusModel]:
+        """
+        Return all statuses fetched.
+
+        :return: A list of StatusModel objects.
+        :rtype: List[StatusModel]
+        """
         return self._all_statuses
 
     def _get_pipelines_list(

@@ -40,6 +40,32 @@ _LIMIT: int = 250
 
 
 class Leads(KommoBase):
+    '''
+    Class to manage leads
+
+    reference: https://developers.kommo.com/reference/leads-list
+
+    :param config: An instance of the KommoConfig class.
+    :type config: KommoConfig
+
+    :param output_verbose: A boolean value to enable verbose output.
+    :type output_verbose: bool
+
+    Example:
+
+    ```python
+    from kommo_sdk_data_engineer.config import KommoConfig
+    from kommo_sdk_data_engineer.endpoints.leads import Leads
+
+    config = KommoConfig(
+        url_company='https://[YOUR SUBDOMAIN].kommo.com',
+        token_long_duration="YOUR_TOKEN"
+    )
+
+    leads = Leads(config, output_verbose=True)
+    leads.get_all_leads_list(with_params=['contacts', 'loss_reason'])
+    leads.to_dataframe(leads.all_leads())
+    '''
     def __init__(self, config: KommoConfig, output_verbose: bool = False):
         config: KommoConfig = config
         self.url_base_api: str = f"{config.url_company}/api/v4"
@@ -67,6 +93,20 @@ class Leads(KommoBase):
         **kwargs
     ) -> List[LeadModel]:
 
+        """
+        Get all leads with their respective custom field values, loss reasons, tags, companies, contacts and catalog elements.
+        
+        reference: https://developers.kommo.com/reference/leads-list
+
+        :param with_params: A list of strings that can be used to filter the results of the API call.
+            The options are: 'contacts', 'loss_reason', 'catalog_elements', 'only_deleted', 'is_price_modified_by_robot', 'source_id'.
+        :type with_params: Optional[List[str]]
+        :param kwargs: Additional keyword arguments to be passed like a dictionary of query parameters to the API call.
+            For example, **{'filter[created_at][from]':1740437575} or any query parameter supported by the API.
+        :type kwargs: dict
+        :return: A list of LeadModel objects.
+        :rtype: List[LeadModel]
+        """
         concurrency = max(self.limit_request_per_second, 1) # define concurrency based on request limit
         chunk_size = concurrency
         current_page = _START_PAGE
@@ -144,6 +184,24 @@ class Leads(KommoBase):
         **kwargs
     ) -> List[LeadModel]:
         
+        """
+        Fetch a page of leads.
+
+        reference: https://developers.kommo.com/reference/leads-list
+
+        :param page: The page number to fetch. Defaults to 1.
+        :type page: int
+        :param limit: The number of leads to fetch per page. Defaults to 250.
+        :type limit: int
+        :param with_params: A list of strings that can be used to filter the results of the API call.
+            The options are: 'contacts', 'only_deleted', 'loss_reason', 'is_price_modified_by_robot', 'catalog_elements', 'source_id'.
+        :type with_params: List[str]
+        :param kwargs: Additional keyword arguments to be passed like a dictionary of query parameters to the API call.
+            For example, **{'filter[created_at][from]':1740437575} or any query parameter supported by the API.
+        :type kwargs: dict
+        :return: A list of LeadModel objects if successful, or None if no data is returned or an error occurs.
+        :rtype: List[LeadModel] or None
+        """
         _total_errors: List[tuple] = []
 
         try:
@@ -170,7 +228,7 @@ class Leads(KommoBase):
             return None
         
         if leads:
-            self._all_leads.append(leads)
+            self._all_leads.extend(leads)
         
         print_with_color(f"Fetched page: [{page}] | Data: {leads}", "\033[90m", output_verbose=self.output_verbose)
         status_execution(
@@ -183,24 +241,72 @@ class Leads(KommoBase):
         return leads
     
     def all_leads(self) -> List[LeadModel]:
+        """
+        Return all leads fetched.
+        
+        :return: A list of LeadModel objects.
+        :rtype: List[LeadModel]
+        """
         return self._all_leads
     
     def all_custom_field_values(self) -> List[CustomFieldValueModel]:
+        """
+        Return all custom field values fetched.
+
+        :return: A list of CustomFieldValueModel objects.
+        :rtype: List[CustomFieldValueModel]
+        """
+
         return self._all_custom_field_values
     
     def all_loss_reasons(self) -> List[LossReasonModel]:
+        """
+        Return all loss reasons fetched if with_params contains 'loss_reason'.
+
+        :return: A list of LossReasonModel objects.
+        :rtype: List[LossReasonModel]
+        """
+        
         return self._all_loss_reasons
     
     def all_tags(self) -> List[TagModel]:
+        """
+        Return all tags fetched for the leads.
+
+        :return: A list of TagModel objects.
+        :rtype: List[TagModel]
+        """
+
         return self._all_tags
     
     def all_companies(self) -> List[CompanyModel]:
+        """
+        Return all companies fetched.
+
+        :return: A list of CompanyModel objects.
+        :rtype: List[CompanyModel]
+        """
+
         return self._all_companies
     
     def all_contacts(self) -> List[ContactModel]:
+        """
+        Return all contacts fetched if 'with_params' includes 'contacts'.
+
+        :return: A list of ContactModel objects.
+        :rtype: List[ContactModel]
+        """
+
         return self._all_contacts
     
     def all_catalog_elements(self) -> List[CatalogElementModel]:
+        """
+        Return all catalog elements fetched if 'with_params' includes 'catalog_elements'.
+
+        :return: A list of CatalogElementModel objects.
+        :rtype: List[CatalogElementModel]
+        """
+
         return self._all_catalog_elements
 
     def _get_leads_list(
@@ -382,7 +488,7 @@ class Leads(KommoBase):
                             stop = True
                         else:
                             results.append(data_page)
-                            print_last_extracted(f"Fetched page: [{page_num}] | Data: {self._leads_list(data_page)}", "\033[90m", output_verbose=self.output_verbose)
+                            print_last_extracted(f"Fetched page: [{page_num}] | Data: {self._leads_list(data_page).get('leads')}", "\033[90m", output_verbose=self.output_verbose)
                     except Exception as e:
                         stop = True
                         kwargs.get('_total_errors').append((page_num, e))
