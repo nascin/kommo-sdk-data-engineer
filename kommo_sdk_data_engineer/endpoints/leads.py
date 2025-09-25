@@ -458,12 +458,14 @@ class Leads(KommoBase):
         catalog_elements: List[CatalogElementModel] = []
 
         for item in catalog_elements_data:
+            metadata = item.get("metadata", {})
+
             catalog_element = CatalogElementModel(
                 lead_id=lead.get("id"),
                 id=item.get("id"),
-                metadata=item.get("metadata"),
-                quantity=item.get("quantity"),
-                catalog_id=item.get("catalog_id"),
+                metadata=metadata,
+                quantity=metadata.get("quantity"),
+                catalog_id=metadata.get("catalog_id"),
             )
             catalog_elements.append(catalog_element)
 
