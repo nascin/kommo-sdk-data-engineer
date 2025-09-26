@@ -143,10 +143,15 @@ class Users(KommoBase):
         users: List[UserModel] = []
 
         for item in users_data:
+            rights = item.get('rights', {})
+
             pipeline = UserModel(
                 id=item.get("id"),
                 name=item.get("name"),
                 email=item.get("email"),
+                is_admin=rights.get('is_admin'),
+                is_active=rights.get('is_active'),
+                group_id=rights.get('group_id'),
             )
             users.append(pipeline)
 
