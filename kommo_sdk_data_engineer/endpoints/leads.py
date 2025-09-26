@@ -323,7 +323,7 @@ class Leads(KommoBase):
         url = f"{self.url_base_api}/leads"
         _params: Dict[str, Any] = {}
 
-        # Validação básica dos parâmetros 'with'
+        # Validation basic of parameters 'with'
         if with_params:
             for param in with_params:
                 if param not in _LEADS_WITH_PARAMETERS:

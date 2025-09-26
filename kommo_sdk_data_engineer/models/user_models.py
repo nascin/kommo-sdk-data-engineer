@@ -13,3 +13,12 @@ class User(BaseModel):
 
     class Config:
         extra = "forbid"
+
+
+class Group(BaseModel):
+    id: int
+    name: Optional[str] = None
+    user_id: int
+
+    class Config:
+        extra = "forbid"
