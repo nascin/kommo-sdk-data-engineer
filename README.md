@@ -267,10 +267,13 @@ config = KommoConfig(
 )
 
 users = Users(config, output_verbose=True)
-users.get_users_list(page=1, limit=250)
+users.get_all_users_list(with_params=['group'])
 ```
 
 ### Methods:
+- **`get_all_users_list()`**:  
+Fetch all users.
+
 - **`get_users_list()`**:  
 Fetch a page of users.
 
