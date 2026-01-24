@@ -1,5 +1,7 @@
 # kommo SDK for Data Enginner
 
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/kommo-sdk-data-engineer?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=BRIGHTGREEN&left_text=downloads)](https://pepy.tech/projects/kommo-sdk-data-engineer)
+
 # Overview
 kommo SDK for Data Enginner is a comprehensive Python SDK designed for data engineers working with the Kommo API. It simplifies API integration, data extraction, and transformation processes, making it easier to manage and analyze data efficiently.
 
